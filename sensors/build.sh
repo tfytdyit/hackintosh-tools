@@ -21,13 +21,19 @@ mkdir -p .build/SensorBar.app/Contents/MacOS .build/SensorBar.app/Contents/Resou
 cp .build/SensorBar .build/SensorBar.app/Contents/MacOS/
 cp SensorBar.icns .build/SensorBar.app/Contents/Resources/
 cp Info.plist .build/SensorBar.app/Contents/Info.plist
-/usr/bin/xattr -cr .build/SensorBar.app 2>/dev/null
-codesign -f -s - --force .build/SensorBar.app
-codesign --verify --strict .build/SensorBar.app
+# 工作区是 file-provider 卷，会往 bundle 里塞 FinderInfo / fpfs 扩展属性，
+# codesign 会因此报 "resource fork, Finder information, or similar detritus not allowed"。
+# 解决：拷到 /tmp 里签名（普通卷），再 ditto 回来。
+SIGN_DIR=$(mktemp -d /tmp/sbsign.XXXXXX)
+rm -rf "$SIGN_DIR/SensorBar.app"
+ditto --norsrc --noextattr --noacl .build/SensorBar.app "$SIGN_DIR/SensorBar.app"
+/usr/bin/xattr -cr "$SIGN_DIR/SensorBar.app"
+codesign -f -s - --force "$SIGN_DIR/SensorBar.app"
+codesign --verify --strict "$SIGN_DIR/SensorBar.app"
 rm -rf SensorBar.app
-rm -rf SensorBar.app
-ditto --norsrc --noextattr --noacl .build/SensorBar.app SensorBar.app
-/usr/bin/xattr -cr SensorBar.app 2>/dev/null
+ditto --norsrc --noextattr --noacl "$SIGN_DIR/SensorBar.app" SensorBar.app
+rm -rf "$SIGN_DIR"
+/usr/bin/xattr -cr SensorBar.app 2>/dev/null || true
 
 echo "== 完成: $(pwd)/SensorBar.app"
 echo "   运行: open SensorBar.app"
