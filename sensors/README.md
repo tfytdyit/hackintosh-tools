@@ -61,9 +61,9 @@ clang -O2 -o sensmon sensmon.c -framework IOKit -framework CoreFoundation
 - **SSD 温度**：本机是 KIOXIA EXCERIA G2，`ioreg` 显示 `NVMe SMART Capable = Yes`，但 macOS 没有用户态读取 NVMe SMART 温度日志的公开接口（除非装 `smartmontools` 并以 root 读，代价大、收益小）。
 - **其他**：没有环境光、没有 T2、没有 SMC 键盘背光/屏幕亮度以外的高级传感器。
 
-## 与 BacklightBar 的关系
+## 与亮度的关系
 
-亮度不走这里：macOS 26 的系统亮度栈（corebrightnessd → AGDC → DPMicro）在本机不可用，所以亮度由 `backlight-tool/` 里的 BacklightBar.app 直接写 SMC 的 `bklt` 参数实现。本工具只负责「看」，不改任何值。
+亮度不在这里：macOS 26 的系统亮度栈（corebrightnessd → AGDC → DPMicro）在本机不可用，SensorBar 只负责「看」指标，不改任何值。
 
 ---
 
@@ -360,3 +360,11 @@ python3 gbimport.py json Gadgetbridge.zip gb-health.json
 - 「磁盘 / NTFS」窗口顶部增加两块物理磁盘的小卡片（型号 + 容量 + 分区数）。
 
 本机实测：`KIOXIA-EXCERIA G2 SSD 1000 GB`（7 个分区：NO NAME / Microsoft Reserved / Win11 Pro X64 / D / NO NAME / Linux Filesystem / Software）+ `Seagate ZA1024CV10002 1024 GB`（3 个分区：Apple_APFS / F / EFI）。
+
+## v5.9：移除蓝牙心率
+
+按要求把华为手环心率整块删掉（不是编译开关，是删代码）：
+
+- 删除 `HeartRate.swift`；`SensorBar.swift` 里的 `hr`、`heartSection`、菜单栏「❤️ 心率」模式、`refreshStatusTitle` 的 case 4 全部移除
+- `build.sh` 去掉 `-framework CoreBluetooth`；`Info.plist` 去掉 `NSBluetoothAlwaysUsageDescription` / `NSBluetoothPeripheralUsageDescription`
+- 现在 SensorBar 完全不需要蓝牙权限，商店版（`build-mas.sh`）也就不存在心率相关的审核问题

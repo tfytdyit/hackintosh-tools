@@ -12,8 +12,8 @@ clang -O2 -o sensmon sensmon.c -framework IOKit -framework CoreFoundation
 echo "== 编译 SensorBar（C 桥接 + SwiftUI）"
 clang -O2 -target x86_64-apple-macos26.0 -isysroot "$SDK" -I. -c bridge.c -o .build/bridge.o
 swiftc -O -target x86_64-apple-macos26.0 -sdk "$SDK" -module-cache-path .build/mc \
-    -import-objc-header bridge.h -o .build/SensorBar SensorBar.swift HeartRate.swift SettingsView.swift UninstallerView.swift DiskToolsView.swift WindowStyle.swift Tools.swift main.swift .build/bridge.o \
-    -framework IOKit -framework CoreFoundation -framework Metal -framework AppKit -framework SwiftUI -framework CoreWLAN -framework CoreBluetooth
+    -import-objc-header bridge.h -o .build/SensorBar SensorBar.swift SettingsView.swift UninstallerView.swift DiskToolsView.swift WindowStyle.swift Tools.swift main.swift .build/bridge.o \
+    -framework IOKit -framework CoreFoundation -framework Metal -framework AppKit -framework SwiftUI -framework CoreWLAN
 
 echo "== 组装并签名 App"
 rm -rf .build/SensorBar.app

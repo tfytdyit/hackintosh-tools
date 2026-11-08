@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <installer-gui-script minSpecVersion="2">
-    <title>黑苹果工具包 1.3</title>
+    <title>@APP@ @VER@</title>
     <options customize="never" require-scripts="false" rootVolumeOnly="true" hostArchitectures="x86_64"/>
     <welcome file="welcome.html"/>
     <conclusion file="conclusion.html"/>
     <choices-outline>
         <line choice="default">
-            <line choice="com.hackintosh.toolpack"/>
+            <line choice="@BID@"/>
         </line>
     </choices-outline>
     <choice id="default"/>
-    <choice id="com.hackintosh.toolpack" visible="false">
-        <pkg-ref id="com.hackintosh.toolpack"/>
+    <choice id="@BID@" visible="false">
+        <pkg-ref id="@BID@"/>
     </choice>
-    <pkg-ref id="com.hackintosh.toolpack">ToolPack.pkg</pkg-ref>
+    <pkg-ref id="@BID@">Payload.pkg</pkg-ref>
 </installer-gui-script>

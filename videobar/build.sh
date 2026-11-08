@@ -9,7 +9,7 @@ mkdir -p "$B/mc" "$B/App/VideoBar.app/Contents/MacOS" "$B/App/VideoBar.app/Conte
 
 echo "==> 编译 VideoBar"
 swiftc -O -target x86_64-apple-macos13.0 -sdk "$SDK" -module-cache-path "$B/mc" \
-  -o "$B/VideoBar" VideoBar.swift PlayerUI.swift Settings.swift main.swift \
+  -o "$B/VideoBar" VideoBar.swift PlayerUI.swift Settings.swift Proxy.swift main.swift \
   -framework AVFoundation -framework AppKit -framework SwiftUI -framework VideoToolbox -framework CoreMedia || exit 1
 
 echo "==> 组装 App"

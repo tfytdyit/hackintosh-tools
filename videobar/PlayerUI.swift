@@ -154,27 +154,15 @@ struct ContentView: View {
     // MARK: 顶栏
 
     private func topBar(compact: Bool) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text(engine.meta.name.isEmpty ? "VideoBar" : engine.meta.name)
-                    .font(.system(size: compact ? 13.5 : 15.5, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                HStack(spacing: 5) {
-                    chip(engine.meta.resText)
-                    if !compact {
-                        chip(engine.meta.fpsText)
-                        chip(engine.meta.bitrateText)
-                    }
-                    chip(engine.meta.codec.isEmpty ? "—" : engine.meta.codec)
-                    chip(engine.meta.hwText, tint: engine.meta.hwDecode ? .green : .orange)
-                    chip(String(format: "×%.2f", engine.effectiveSpeed),
-                         tint: engine.effectiveSpeed > 0.97 ? .green : .orange)
-                    if engine.stalls > 0 { chip("卡顿 \(engine.stalls)", tint: .red) }
-                }
-            }
+        HStack(spacing: 8) {
             Spacer(minLength: 0)
+            if engine.usingProxy {
+                Text("1080p 代理")
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.green.opacity(0.95))
+                    .padding(.horizontal, 6).padding(.vertical, 2.5)
+                    .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(.black.opacity(0.35)))
+            }
             HStack(spacing: 4) {
                 HoverIcon(symbol: "list.bullet", size: 13, active: showPlaylist, help: "播放列表（V）") {
                     withAnimation(.easeInOut(duration: 0.18)) { showPlaylist.toggle() }
@@ -190,15 +178,9 @@ struct ContentView: View {
                     .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .strokeBorder(.white.opacity(0.10), lineWidth: 0.5))
             )
-            .padding(.top, 2)
         }
         .padding(.horizontal, 18)
         .padding(.top, 14)
-        .padding(.bottom, 34)
-        .background(
-            LinearGradient(colors: [.black.opacity(0.75), .black.opacity(0.35), .black.opacity(0)],
-                           startPoint: .top, endPoint: .bottom)
-        )
     }
 
     private func chip(_ text: String, tint: Color = .white) -> some View {

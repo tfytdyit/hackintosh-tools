@@ -11,6 +11,7 @@ enum VBSettings {
     static let hideDelay = "vb.hideDelay"
     static let seekStep = "vb.seekStep"
     static let playlistOnOpen = "vb.playlistOnOpen"
+    static let autoProxy = "vb.autoProxy"
     static let defaultVolume = "vb.defaultVolume"
     static let windowWidth = "vb.windowWidth"
     static let windowHeight = "vb.windowHeight"
@@ -24,6 +25,7 @@ enum VBSettings {
             hideDelay: 2.6,
             seekStep: 5.0,
             playlistOnOpen: false,
+            autoProxy: true,
             defaultVolume: 1.0,
             windowWidth: 1100.0,
             windowHeight: 660.0,
@@ -39,6 +41,7 @@ struct VBSettingsView: View {
     @AppStorage(VBSettings.hideDelay) private var hideDelay = 2.6
     @AppStorage(VBSettings.seekStep) private var seekStep = 5.0
     @AppStorage(VBSettings.playlistOnOpen) private var playlistOnOpen = false
+    @AppStorage(VBSettings.autoProxy) private var autoProxy = true
     @AppStorage(VBSettings.defaultVolume) private var defaultVolume = 1.0
 
     @State private var cleared = ""
@@ -74,6 +77,7 @@ struct VBSettingsView: View {
                         toggleRow("播完自动下一个", $autoAdvance)
                         toggleRow("默认单曲循环", $loopByDefault)
                         toggleRow("打开文件时展开播放列表", $playlistOnOpen)
+                        toggleRow("2× 以上自动切到 1080p 代理（更流畅）", $autoProxy)
                     }
                     card("控制条") {
                         HStack {

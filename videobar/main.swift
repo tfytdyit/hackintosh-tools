@@ -47,6 +47,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         pendingURLs.removeAll()
         queued.forEach { openTarget($0) }
 
+        // 调试/测试用：--rate=2 直接以指定倍速起播
+        if let a = CommandLine.arguments.first(where: { $0.hasPrefix("--rate=") }),
+           let v = Double(a.dropFirst("--rate=".count)) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                self?.engine.setSpeed(v)
+            }
+        }
+
         // 启动参数：直接打开某个文件/文件夹
         for arg in CommandLine.arguments.dropFirst() where !arg.hasPrefix("-") {
             let url = URL(fileURLWithPath: (arg as NSString).expandingTildeInPath)

@@ -11,7 +11,7 @@ mkdir -p "$B/mc" "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 echo "==> 编译（无心率版本）"
 clang -O2 -target x86_64-apple-macos26.0 -isysroot "$SDK" -I. -c bridge.c -o "$B/bridge.o" || exit 1
-swiftc -O -D NO_HEART -target x86_64-apple-macos26.0 -sdk "$SDK" -module-cache-path "$B/mc" \
+swiftc -O -target x86_64-apple-macos26.0 -sdk "$SDK" -module-cache-path "$B/mc" \
   -import-objc-header bridge.h \
   -o "$APP/Contents/MacOS/SensorBar" \
   SensorBar.swift SettingsView.swift UninstallerView.swift DiskToolsView.swift WindowStyle.swift Tools.swift main.swift "$B/bridge.o" \

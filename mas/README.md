@@ -11,7 +11,6 @@
 |---|---|---|
 | **VideoBar**（视频播放器） | ✅ **能**，改动不大 | 只用 AVFoundation / SwiftUI / AppKit，全部在沙箱允许范围内 |
 | **SensorBar**（监控数据） | ❌ **基本不能** | 核心功能（AppleSMC 温度/电压、libproc 进程、`diskutil` 子进程、卸载 App、`pmset` 改电源）在 App Sandbox 下被系统拒绝，且**没有 entitlement 能放开** |
-| BacklightBar（亮度） | ❌ 不能 | 直接写 IOKit `bklt` 参数，沙箱禁止 |
 
 Mac App Store 强制要求 **App Sandbox 打开**（[Apple 审核指南 2.4.5 / 构建要求](https://developer.apple.com/app-store/review/guidelines/)），而沙箱明确不允许访问 IOKit 设备（社区结论见 [IOKit not permitted in Sandbox](https://stackoverflow.com/questions/23244349/iokit-not-permitted-in-sandbox)、[sandboxed app 读 AppleSMC](https://stackoverflow.com/questions/27386340/os-x-cocoa-access-applesmc-from-sandboxed-app)）。这不是签名/权限问题，是能力被拿掉。
 
@@ -138,7 +137,7 @@ VideoBar 审核关注点：
 | 砍成商店版 | 只剩 CPU/内存/网络/电池等 Mach API 能读的部分 + 心率（你已要求砍），产品价值大幅下降 | $99/年 + 审核 |
 | Setapp / 独立站 | 第三方订阅商店，允许非沙箱 App（需审核） | 分成 15% |
 
-我的建议：**VideoBar 上商店**（流量入口），**SensorBar / BacklightBar 走 Developer ID 公证**（功能完整），两者共用同一个 $99 账号。
+我的建议：**VideoBar 上商店**（流量入口），**SensorBar 走 Developer ID 公证**（功能完整），两者共用同一个 $99 账号。
 
 ---
 

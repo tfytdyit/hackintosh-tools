@@ -52,6 +52,10 @@ final class PlayerEngine: NSObject, ObservableObject {
     @Published var playlist: [URL] = []
     @Published var index: Int = 0
     @Published var status: String = ""
+    @Published var usingProxy = false        // 当前播放的是 1080p 代理
+    @Published var sourceURL: URL?           // 原始文件（代理模式下 currentURL 指向代理）
+    @Published var proxyPreparing = false
+    @Published var proxyProgress: Double = -1
 
     private var timeObserver: Any?
     private var lastWall = CACurrentMediaTime()
@@ -82,9 +86,13 @@ final class PlayerEngine: NSObject, ObservableObject {
     }
 
     private func addPeriodicObserver() {
+        var ticks = 0
         timeObserver = player.addPeriodicTimeObserver(forInterval: CMTime(value: 1, timescale: 4),
                                                       queue: .main) { [weak self] t in
             guard let self else { return }
+            ticks += 1
+            // 高速播放时把 UI 刷新降到 2Hz，减少主线程/SwiftUI 重绘抢解码资源
+            if self.speed > 1.5 && ticks % 2 != 0 { return }
             self.position = t.seconds.isFinite ? t.seconds : 0
             self.measureSmoothness(pos: self.position)
         }
@@ -116,6 +124,8 @@ final class PlayerEngine: NSObject, ObservableObject {
             self.index = 0
         }
 
+        sourceURL = url
+        usingProxy = false
         currentURL = url
         isPlaying = false
         position = 0
@@ -154,6 +164,73 @@ final class PlayerEngine: NSObject, ObservableObject {
             status = "已暂停"
         }
         applySpeed()
+        ensureProxyState()
+    }
+
+    // MARK: 1080p 代理（高速播放用）
+
+    private var autoProxyEnabled: Bool {
+        UserDefaults.standard.object(forKey: VBSettings.autoProxy) as? Bool ?? true
+    }
+
+    private func observe(_ item: AVPlayerItem) {
+        if let e = endObserver { NotificationCenter.default.removeObserver(e) }
+        endObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime,
+                                                             object: item, queue: .main) { [weak self] _ in
+            self?.handleEnded()
+        }
+        if let s = stallObserver { NotificationCenter.default.removeObserver(s) }
+        stallObserver = NotificationCenter.default.addObserver(forName: .AVPlayerItemPlaybackStalled,
+                                                              object: item, queue: .main) { [weak self] _ in
+            self?.stalls += 1
+        }
+    }
+
+    /// 在「原片」与「1080p 代理」之间无缝切换（保留进度与播放状态）
+    private func swapItem(to url: URL, proxy: Bool) {
+        let pos = player.currentTime().seconds
+        let wasPlaying = isPlaying
+        let item = AVPlayerItem(url: url)
+        item.preferredForwardBufferDuration = 3
+        player.automaticallyWaitsToMinimizeStalling = false
+        player.replaceCurrentItem(with: item)
+        observe(item)
+        usingProxy = proxy
+        currentURL = url
+        player.seek(to: CMTime(seconds: pos, preferredTimescale: 600),
+                    toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+            guard let self else { return }
+            if wasPlaying { self.player.playImmediately(atRate: Float(self.speed)) }
+            self.position = pos
+            self.lastPos = pos
+            self.lastWall = CACurrentMediaTime()
+            self.applySpeed()
+        }
+    }
+
+    /// 速度 ≥1.4 且开启了自动代理时：有代理就切过去，没有就后台生成
+    func ensureProxyState() {
+        guard let src = sourceURL else { return }
+        let wantProxy = autoProxyEnabled && speed >= 1.4
+        if wantProxy {
+            if usingProxy { return }
+            if let ready = ProxyManager.shared.existingProxy(for: src) {
+                swapItem(to: ready, proxy: true)
+                return
+            }
+            guard !proxyPreparing else { return }
+            proxyPreparing = true
+            ProxyManager.shared.makeProxy(for: src) { [weak self] out in
+                guard let self else { return }
+                self.proxyPreparing = false
+                guard let out else { return }
+                if self.autoProxyEnabled, self.speed >= 1.4, self.sourceURL == src, !self.usingProxy {
+                    self.swapItem(to: out, proxy: true)
+                }
+            }
+        } else if usingProxy, let ready = src as URL? {
+            swapItem(to: ready, proxy: false)
+        }
     }
 
     private func loadMeta(url: URL, item: AVPlayerItem) {
@@ -225,9 +302,12 @@ final class PlayerEngine: NSObject, ObservableObject {
     func setSpeed(_ s: Double) {
         speed = s
         applySpeed()
+        ensureProxyState()
     }
 
     private func applySpeed() {
+        // 2x 时 spectral 时间伸缩很吃 CPU，会挤占 HEVC 硬解；用 varispeed（变调不变速）更省
+        player.currentItem?.audioTimePitchAlgorithm = speed == 1.0 ? .spectral : .varispeed
         player.rate = isPlaying ? Float(speed) : 0
     }
 

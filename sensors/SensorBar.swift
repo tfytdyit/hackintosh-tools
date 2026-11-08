@@ -599,9 +599,6 @@ struct ContentHeightKey: PreferenceKey {
 
 struct RootView: View {
     @ObservedObject var m: Metrics
-#if !NO_HEART
-    @ObservedObject var hr: HeartRateMonitor
-#endif
     @State private var open: Set<String> = RootView.initialOpen
     @AppStorage("glassOpacity") private var glassOpacity: Double = 0.0
     @StateObject private var tools = Toolbox()
@@ -639,9 +636,6 @@ struct RootView: View {
                     overviewSection
                     cpuSection
                     gpuSection
-#if !NO_HEART
-                    heartSection
-#endif
                     memSection
                     battSection
                     diskSection
@@ -870,52 +864,6 @@ struct RootView: View {
         }
     }
 
-#if !NO_HEART
-    // MARK: 心率（BLE）
-    private var heartSection: some View {
-        FoldSection(title: "心率", icon: "heart.fill",
-                    summary: hr.bpm > 0 ? "\(hr.bpm) bpm · \(hr.deviceName)" : hr.status,
-                    expanded: bind("heart")) {
-            HStack(alignment: .center, spacing: 10) {
-                VStack(alignment: .leading, spacing: 1) {
-                    HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(hr.bpm > 0 ? "\(hr.bpm)" : "—")
-                            .font(.system(size: 26, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Color.pink)
-                        Text("bpm").font(.system(size: 10, weight: .medium))
-                            .foregroundStyle(Color.primary.opacity(0.6))
-                    }
-                    Text(hr.deviceName.isEmpty ? "蓝牙心率设备" : hr.deviceName)
-                        .font(.system(size: 9))
-                        .foregroundStyle(Color.primary.opacity(0.72))
-                }
-                Spacer(minLength: 0)
-                if !hr.history.isEmpty {
-                    Sparkline(values: hr.history.map { Double($0) }, tint: .pink).frame(width: 100, height: 26)
-                }
-            }
-            if hr.history.count > 1 {
-                let lo = hr.history.min() ?? 0
-                let hi = hr.history.max() ?? 0
-                let avg = hr.history.reduce(0, +) / hr.history.count
-                LabelValue(label: "最近 60 次", value: "最低 \(lo) / 平均 \(avg) / 最高 \(hi) bpm")
-            }
-            LabelValue(label: "连接状态", value: hr.status)
-            LabelValue(label: "手环电量", value: hr.battery >= 0 ? "\(hr.battery)%" : "—")
-            LabelValue(label: "佩戴位置", value: hr.sensorLocation.isEmpty ? "—" : hr.sensorLocation)
-            LabelValue(label: "最近更新", value: hr.lastUpdate.map { Self.hhmmss.string(from: $0) } ?? "—")
-            Text("来自标准蓝牙心率服务（服务 0x180D / 特征 0x2A37），手环需开启「连续心率/实时心率」；断开后会自动重连。")
-                .font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.6))
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private static let hhmmss: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "HH:mm:ss"; return f
-    }()
-
-    // MARK: 内存
-#endif
 
     private var memSection: some View {
         FoldSection(title: "内存", icon: "memorychip",
@@ -1284,9 +1232,6 @@ struct RootView: View {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let metrics = Metrics()
-#if !NO_HEART
-    let heartRate = HeartRateMonitor()
-#endif
     var statusItem: NSStatusItem!
     var panel: NSPanel!
     var hosting: NSHostingView<RootView>!
@@ -1313,11 +1258,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
-#if NO_HEART
-        hosting = NSHostingView(rootView: RootView(m: metrics))
-#else
-        hosting = NSHostingView(rootView: RootView(m: metrics, hr: heartRate))
-#endif
         hosting.frame = NSRect(x: 0, y: 0, width: 400, height: 560)
 
         panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 560),
@@ -1417,9 +1357,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case 1: s = String(format: "%.0f°  ", metrics.tempPkg) + netPart
         case 2: s = netPart
         case 3: s = String(format: "%.0f%%", metrics.cpuUsage)
-#if !NO_HEART
-        case 4: s = heartRate.bpm > 0 ? "❤️ \(heartRate.bpm)" : "❤️ —"
-#endif
         default:
             s = String(format: "%.0f°", metrics.tempPkg)
             if metrics.showNetInMenuBar { s += "  " + netPart }
