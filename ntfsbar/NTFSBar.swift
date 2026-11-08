@@ -179,6 +179,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         statusItem.menu = menu
 
+        if UserDefaults.standard.bool(forKey: "hideIcon") { statusItem.isVisible = false }
+
         refresh()
         timer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in self?.refresh() }
         RunLoop.main.add(timer!, forMode: .common)
@@ -275,6 +277,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
+        let hide = NSMenuItem(title: "隐藏菜单栏图标（再次打开 App 可恢复）",
+                              action: #selector(hideIcon), keyEquivalent: "")
+        hide.target = self
+        menu.addItem(hide)
+
         let quit = NSMenuItem(title: "退出 NTFSBar", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
@@ -382,6 +389,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func openVolumes() { NSWorkspace.shared.open(URL(fileURLWithPath: "/Volumes")) }
     @objc private func doRefresh() { refresh(); rebuildMenu() }
+    @objc private func hideIcon() {
+        UserDefaults.standard.set(true, forKey: "hideIcon")
+        statusItem.isVisible = false
+        lastMessage = "菜单栏图标已隐藏，再打开一次 NTFSBar 就会恢复"
+    }
+
+    /// 再次打开 App（⌘-Tab / 双击 /Applications/NTFSBar.app）时把图标恢复出来
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if UserDefaults.standard.bool(forKey: "hideIcon") {
+            UserDefaults.standard.set(false, forKey: "hideIcon")
+            statusItem.isVisible = true
+            lastMessage = "菜单栏图标已恢复"
+        }
+        return true
+    }
+
     @objc private func quit() { NSApp.terminate(nil) }
 }
 
