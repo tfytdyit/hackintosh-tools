@@ -4,12 +4,12 @@
 
 | App | 版本 | 说明 | 截图 |
 |---|---|---|---|
-| **SensorBar** | 5.9.1 | 菜单栏状态监控：CPU 温度/各核温度/功耗/电压（直读 AppleSMC）、GPU 占用、内存细分、电池健康、磁盘读写、实时网速 + Cloudflare 测速、进程 TOP、工具箱（清理缓存/卸载 App/一键优化/） | ![SensorBar](sensors/SensorBar-screenshot.png) |
-| **VideoBar** | 1.3.1 | 视频播放器：4K60 HEVC 硬解直通（实时 ×1.000）、2× 以上自动切 720p 代理保持流畅、悬浮毛玻璃控制条、播放列表、续播、全屏、独立设置窗口 | ![VideoBar](videobar/VideoBar-screenshot.png) |
+| **SensorBar** | 5.9.1 | 菜单栏状态监控：CPU 温度/各核温度/功耗/电压（直读 AppleSMC）、GPU 占用、内存细分、电池健康、磁盘读写、实时网速 + Cloudflare 测速、进程 TOP、工具箱（清理缓存/卸载 App/一键优化/） |
+| **VideoBar** | 1.3.1 | 视频播放器：4K60 HEVC 硬解直通（实时 ×1.000）、2× 以上自动切 720p 代理保持流畅、悬浮毛玻璃控制条、播放列表、续播、全屏、独立设置窗口 |
 
 ## 下载 / 安装
 
-- **Releases 页面** 提供两个独立安装包：`SensorBar-<版本>.pkg`、`VideoBar-<版本>.pkg`（各自装到 `/Applications`）
+- **Releases 页面** ：`SensorBar-<版本>.pkg`、`VideoBar-<版本>.pkg`（各自装到 `/Applications`）
 - 或自行构建（见下），产物直接 `open` 即可
 
 > 这些包是**本地 ad-hoc 签名**，没有 Apple 开发者证书。第一次打开若提示「无法打开，因为无法验证开发者」：
