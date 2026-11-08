@@ -21,10 +21,13 @@ mkdir -p .build/SensorBar.app/Contents/MacOS .build/SensorBar.app/Contents/Resou
 cp .build/SensorBar .build/SensorBar.app/Contents/MacOS/
 cp SensorBar.icns .build/SensorBar.app/Contents/Resources/
 cp Info.plist .build/SensorBar.app/Contents/Info.plist
+/usr/bin/xattr -cr .build/SensorBar.app 2>/dev/null
 codesign -f -s - --force .build/SensorBar.app
 codesign --verify --strict .build/SensorBar.app
 rm -rf SensorBar.app
-ditto .build/SensorBar.app SensorBar.app
+rm -rf SensorBar.app
+ditto --norsrc --noextattr --noacl .build/SensorBar.app SensorBar.app
+/usr/bin/xattr -cr SensorBar.app 2>/dev/null
 
 echo "== 完成: $(pwd)/SensorBar.app"
 echo "   运行: open SensorBar.app"

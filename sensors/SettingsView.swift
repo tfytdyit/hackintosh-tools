@@ -53,23 +53,23 @@ struct SettingsView: View {
                     WSectionTitle(text: "外观")
                     WCard {
                         HStack {
-                            Text("磨砂强度").font(.system(size: 11.5))
+                            Text("磨砂强度").font(.system(size: 13__))
                             Spacer()
                             Text(String(format: "%.0f%%", min(100, glass / 0.25 * 100)))
-                                .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                                .font(.system(size: 12__, weight: .medium, design: .monospaced))
                                 .foregroundStyle(.secondary)
                         }
                         Slider(value: $glass, in: 0.0...0.25)
                             .controlSize(.small)
                             .onChange(of: glass) { _, _ in flashSaved() }
                         Text("0% = 完全透明（只有模糊感），100% = 深色磨砂")
-                            .font(.system(size: 9.5)).foregroundStyle(.secondary)
+                            .font(.system(size: 11__)).foregroundStyle(.secondary)
                     }
 
                     WSectionTitle(text: "菜单栏")
                     WCard {
                         HStack {
-                            Text("显示内容").font(.system(size: 11.5))
+                            Text("显示内容").font(.system(size: 13__))
                             Spacer()
                         }
                         Picker("", selection: $menuMode) {
@@ -84,7 +84,7 @@ struct SettingsView: View {
                             flashSaved()
                         }
                         Toggle("菜单栏同时显示网速", isOn: $showNet)
-                            .font(.system(size: 11.5))
+                            .font(.system(size: 13__))
                             .toggleStyle(.switch).controlSize(.mini)
                             .onChange(of: showNet) { _, _ in
                                 NotificationCenter.default.post(name: .init("SensorBarMenuBarPrefsChanged"), object: nil)
@@ -94,7 +94,7 @@ struct SettingsView: View {
 
                     WSectionTitle(text: "数据")
                     WCard {
-                        Text("刷新间隔").font(.system(size: 11.5))
+                        Text("刷新间隔").font(.system(size: 13__))
                         Picker("", selection: $interval) {
                             Text("1 秒").tag(1.0)
                             Text("2 秒").tag(2.0)
@@ -112,7 +112,7 @@ struct SettingsView: View {
                     WSectionTitle(text: "通用")
                     WCard {
                         Toggle("开机自动启动", isOn: $autostart)
-                            .font(.system(size: 11.5))
+                            .font(.system(size: 13__))
                             .toggleStyle(.switch).controlSize(.mini)
                             .onChange(of: autostart) { _, v in
                                 let on = AutoStart.isOn
@@ -135,14 +135,14 @@ struct SettingsView: View {
                         }
                         Spacer()
                         if savedHint {
-                            Text("已保存").font(.system(size: 10.5)).foregroundStyle(.green)
+                            Text("已保存").font(.system(size: 12__)).foregroundStyle(.green)
                                 .transition(.opacity)
                         }
                     }
                     .padding(.top, 2)
 
                     Text("配置：~/Library/Preferences/com.hackintosh.SensorBar.plist")
-                        .font(.system(size: 9)).foregroundStyle(.tertiary)
+                        .font(.system(size: 10.5__)).foregroundStyle(.tertiary)
                         .padding(.bottom, 8)
                 }
                 .padding(14)
@@ -156,7 +156,7 @@ struct SettingsView: View {
     private func group<C: View>(_ title: String, @ViewBuilder content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(title)
-                .font(.system(size: 9.5, weight: .semibold))
+                .font(.system(size: 11__, weight: .semibold))
                 .foregroundStyle(.secondary)
             content()
             Divider().padding(.vertical, 4)

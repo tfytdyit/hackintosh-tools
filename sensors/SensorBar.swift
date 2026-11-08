@@ -457,13 +457,13 @@ struct ProcLine: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(name)
-                .font(.system(size: 10.5))
-                .foregroundStyle(Color.primary.opacity(0.72))
+                .font(.system(size: 12__))
+                .foregroundStyle(Color.primary.opacity(0.88))
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer(minLength: 4)
             Text(right)
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .font(.system(size: 11.5__, weight: .medium, design: .monospaced))
                 .foregroundStyle(highlight ? Color.orange : Color.primary)
                 .fixedSize()
         }
@@ -477,10 +477,10 @@ struct LabelValue: View {
     var mono = true
     var body: some View {
         HStack(spacing: 8) {
-            Text(label).font(.system(size: 10.5)).foregroundStyle(Color.primary.opacity(0.72))
+            Text(label).font(.system(size: 12__)).foregroundStyle(Color.primary.opacity(0.88))
             Spacer(minLength: 6)
             Text(value)
-                .font(.system(size: 11, weight: .medium, design: mono ? .monospaced : .default))
+                .font(.system(size: 12.5__, weight: .medium, design: mono ? .monospaced : .default))
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -503,19 +503,19 @@ struct FoldSection<Content: View>: View {
             } label: {
                 HStack(spacing: 7) {
                     Image(systemName: icon)
-                        .font(.system(size: 10.5, weight: .semibold))
-                        .foregroundStyle(Color.primary.opacity(0.72))
+                        .font(.system(size: 12__, weight: .semibold))
+                        .foregroundStyle(Color.primary.opacity(0.88))
                         .frame(width: 15, alignment: .leading)
-                    Text(title).font(.system(size: 11.5, weight: .semibold))
+                    Text(title).font(.system(size: 13__, weight: .semibold))
                     Spacer(minLength: 6)
                     if !summary.isEmpty {
                         Text(summary)
-                            .font(.system(size: 10, weight: .medium, design: .monospaced))
-                            .foregroundStyle(Color.primary.opacity(0.72))
+                            .font(.system(size: 11.5__, weight: .medium, design: .monospaced))
+                            .foregroundStyle(Color.primary.opacity(0.88))
                             .lineLimit(1)
                     }
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 7.5, weight: .bold))
+                        .font(.system(size: 7.5__, weight: .bold))
                         .foregroundStyle(.secondary.opacity(0.8))
                         .rotationEffect(.degrees(expanded ? 180 : 0))
                 }
@@ -577,10 +577,10 @@ struct ActionTile: View {
         Button(action: action) {
             VStack(spacing: 3) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 17.5__, weight: .medium))
                     .foregroundStyle(tint)
                 Text(title)
-                    .font(.system(size: 9))
+                    .font(.system(size: 10.5__))
                     .foregroundStyle(Color.primary.opacity(0.8))
                     .lineLimit(1)
             }
@@ -592,6 +592,24 @@ struct ActionTile: View {
     }
 }
 
+struct VisualEffectBackground: NSViewRepresentable {
+    var material: NSVisualEffectView.Material = .hudWindow
+    var blending: NSVisualEffectView.BlendingMode = .behindWindow
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+        let v = NSVisualEffectView()
+        v.material = material
+        v.blendingMode = blending
+        v.state = .active
+        v.isEmphasized = false
+        return v
+    }
+    func updateNSView(_ v: NSVisualEffectView, context: Context) {
+        v.material = material
+        v.blendingMode = blending
+    }
+}
+
 struct ContentHeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
@@ -600,7 +618,7 @@ struct ContentHeightKey: PreferenceKey {
 struct RootView: View {
     @ObservedObject var m: Metrics
     @State private var open: Set<String> = RootView.initialOpen
-    @AppStorage("glassOpacity") private var glassOpacity: Double = 0.0
+    @AppStorage("glassOpacity") private var glassOpacity: Double = 0.06
     @StateObject private var tools = Toolbox()
     @StateObject private var pm = PowerMode()
     @State private var pendingClean: CleanItem? = nil
@@ -662,10 +680,13 @@ struct RootView: View {
             NotificationCenter.default.post(name: .init("SensorBarContentHeight"), object: h)
         }
         .background(Color.clear)
-        .glassEffect(glassOpacity > 0.001
-                     ? .regular.tint(Color.black.opacity(glassOpacity))
-                     : .clear.tint(Color.white.opacity(0.16)),
-                     in: .rect(cornerRadius: 26))
+        .background(
+            ZStack {
+                VisualEffectBackground(material: .hudWindow, blending: .behindWindow)
+                Color.black.opacity(glassOpacity)      // 0 = 全透，往右拖加深
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        )
         .overlay(
             RoundedRectangle(cornerRadius: 26, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.11), lineWidth: 0.8)
@@ -700,15 +721,15 @@ struct RootView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(m.model).font(.system(size: 14.5, weight: .semibold))
-                Text(m.osVersion).font(.system(size: 10)).foregroundStyle(Color.primary.opacity(0.72))
+                Text(m.model).font(.system(size: 14.5__, weight: .semibold))
+                Text(m.osVersion).font(.system(size: 11.5__)).foregroundStyle(Color.primary.opacity(0.88))
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
                 Text("已运行 " + fmtUptime(m.uptime))
-                    .font(.system(size: 10, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.72))
+                    .font(.system(size: 11.5__, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.88))
                 Text(m.thermal <= 0 ? "热压力正常" : "热压力 \(Int(m.thermal))")
-                    .font(.system(size: 9.5)).foregroundStyle(m.thermal <= 0 ? .green : .orange)
+                    .font(.system(size: 11__)).foregroundStyle(m.thermal <= 0 ? .green : .orange)
             }
         }
     }
@@ -737,10 +758,10 @@ struct RootView: View {
 
     private func metricTile(title: String, value: String, sub: String, tint: Color) -> some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(title).font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
-            Text(value).font(.system(size: 17, weight: .semibold, design: .rounded))
+            Text(title).font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
+            Text(value).font(.system(size: 18.5__, weight: .semibold, design: .rounded))
                 .foregroundStyle(tint).lineLimit(1).minimumScaleFactor(0.7)
-            Text(sub).font(.system(size: 8.5, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.72)).lineLimit(1)
+            Text(sub).font(.system(size: 10__, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.88)).lineLimit(1)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 6).padding(.horizontal, 7)
@@ -755,23 +776,23 @@ struct RootView: View {
             HStack(alignment: .center, spacing: 10) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(String(format: "%.1f°", m.tempPkg))
-                        .font(.system(size: 30, weight: .semibold, design: .rounded))
+                        .font(.system(size: 30.0__, weight: .semibold, design: .rounded))
                         .foregroundStyle(tempColor(m.tempPkg))
-                    Text("封装温度 TC0P").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
+                    Text("封装温度 TC0P").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
                 }
                 Spacer(minLength: 0)
                 VStack(alignment: .trailing, spacing: 1) {
                     Text(String(format: "%.0f%%", m.cpuUsage))
-                        .font(.system(size: 19, weight: .semibold, design: .rounded))
-                        .foregroundStyle(Color.primary.opacity(0.72))
-                    Text("CPU 使用率").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
+                        .font(.system(size: 19.0__, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.primary.opacity(0.88))
+                    Text("CPU 使用率").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
                 }
             }
             HStack(spacing: 5) {
                 ForEach(Array(m.cores.enumerated()), id: \.offset) { _, t in
                     VStack(spacing: 2) {
                         Text(String(format: "%.0f", t))
-                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .font(.system(size: 10.5__, weight: .medium, design: .monospaced))
                             .foregroundStyle(tempColor(t))
                         Capsule().fill(tempColor(t).opacity(0.75))
                             .frame(height: max(3, CGFloat(min(1, t / 100)) * 20))
@@ -786,7 +807,7 @@ struct RootView: View {
             LabelValue(label: "功耗 / 上限", value: String(format: "%.2f W / %.1f W", m.power, m.powerPL))
             LabelValue(label: "核心电压", value: String(format: "%.3f V", m.vcore))
             Divider().overlay(Color.white.opacity(0.06))
-            Text("占用最高的进程").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
+            Text("占用最高的进程").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
             ForEach(m.topCPU.prefix(4)) { p in
                 ProcLine(name: p.name, right: String(format: "%.1f%%   %.0f MB", p.cpu, p.memMB), highlight: p.cpu > 30)
             }
@@ -811,8 +832,8 @@ struct RootView: View {
                         pm.apply(mode) { msg in tools.lastMessage = msg }
                     } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: mode.icon).font(.system(size: 11, weight: .medium))
-                            Text(mode.rawValue).font(.system(size: 10, weight: .medium))
+                            Image(systemName: mode.icon).font(.system(size: 12.5__, weight: .medium))
+                            Text(mode.rawValue).font(.system(size: 11.5__, weight: .medium))
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 26)
@@ -831,8 +852,8 @@ struct RootView: View {
                 }
             }
             if !pm.message.isEmpty {
-                Text(pm.message).font(.system(size: 8.5))
-                    .foregroundStyle(Color.primary.opacity(0.6))
+                Text(pm.message).font(.system(size: 10__))
+                    .foregroundStyle(Color.primary.opacity(0.75))
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -847,10 +868,10 @@ struct RootView: View {
             HStack(alignment: .center, spacing: 10) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text(m.gpuUtil >= 0 ? "\(m.gpuUtil)%" : "—")
-                        .font(.system(size: 26, weight: .semibold, design: .rounded))
+                        .font(.system(size: 28__, weight: .semibold, design: .rounded))
                         .foregroundStyle(Color.cyan)
-                    Text("GPU 占用（Device Utilization）").font(.system(size: 9))
-                        .foregroundStyle(Color.primary.opacity(0.72))
+                    Text("GPU 占用（Device Utilization）").font(.system(size: 10.5__))
+                        .foregroundStyle(Color.primary.opacity(0.88))
                 }
                 Spacer(minLength: 0)
             }
@@ -859,7 +880,7 @@ struct RootView: View {
             LabelValue(label: "设备", value: "Intel UHD Graphics 630")
             LabelValue(label: "显存（动态共享）", value: "1536 MB")
             Text("说明：核显占用来自 IOAccelerator 的 PerformanceStatistics，NVIDIA GTX 1050 在 macOS 26 无驱动、不提供任何指标。")
-                .font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.6))
+                .font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.75))
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -877,7 +898,7 @@ struct RootView: View {
             LabelValue(label: "内存压力", value: pressureText(m.memPressure),
                        color: m.memPressure >= 4 ? .red : (m.memPressure == 2 ? .orange : .green))
             Divider().overlay(Color.white.opacity(0.06))
-            Text("占用内存最多的进程").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
+            Text("占用内存最多的进程").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
             ForEach(m.topMem.prefix(4)) { p in
                 ProcLine(name: p.name, right: String(format: "%.0f MB", p.memMB))
             }
@@ -952,19 +973,19 @@ struct RootView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 5) {
                             Image(systemName: d.solid ? "internaldrive.fill" : "externaldrive.fill")
-                                .font(.system(size: 9))
-                                .foregroundStyle(Color.primary.opacity(0.6))
+                                .font(.system(size: 10.5__))
+                                .foregroundStyle(Color.primary.opacity(0.75))
                             Text(d.model)
-                                .font(.system(size: 10.5, weight: .medium))
+                                .font(.system(size: 12__, weight: .medium))
                                 .lineLimit(1).truncationMode(.middle)
                             Spacer(minLength: 4)
                             Text(String(format: "%.0f GB", d.sizeGB))
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundStyle(Color.primary.opacity(0.72))
+                                .font(.system(size: 11.5__, design: .monospaced))
+                                .foregroundStyle(Color.primary.opacity(0.88))
                         }
                         Text(diskPartsLine(d))
-                            .font(.system(size: 9))
-                            .foregroundStyle(Color.primary.opacity(0.55))
+                            .font(.system(size: 10.5__))
+                            .foregroundStyle(Color.primary.opacity(0.7))
                             .lineLimit(2)
                     }
                     .padding(.vertical, 3)
@@ -1007,10 +1028,10 @@ struct RootView: View {
             HStack(alignment: .bottom, spacing: 8) {
                 VStack(alignment: .leading, spacing: 1) {
                     Text("↓ " + fmtBytes(m.downBps))
-                        .font(.system(size: 15, weight: .semibold, design: .monospaced))
+                        .font(.system(size: 16.5__, weight: .semibold, design: .monospaced))
                         .foregroundStyle(.cyan)
                     Text("↑ " + fmtBytes(m.upBps))
-                        .font(.system(size: 10.5, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.72))
+                        .font(.system(size: 12__, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.88))
                 }
                 Spacer(minLength: 0)
                 Sparkline(values: m.netHistory, tint: .cyan)
@@ -1028,7 +1049,7 @@ struct RootView: View {
                         if m.testing { ProgressView().controlSize(.mini) }
                         Text(m.testing ? "测速中…" : "测速")
                     }
-                    .font(.system(size: 10.5, weight: .medium))
+                    .font(.system(size: 12__, weight: .medium))
                     .padding(.horizontal, 9).padding(.vertical, 3.5)
                     .background(Capsule().fill(Color.white.opacity(0.10)))
                 }
@@ -1037,9 +1058,9 @@ struct RootView: View {
 
                 if let s = m.speed {
                     Text(String(format: "↓%.1f / ↑%.1f Mbps", s.downloadMbps ?? 0, s.uploadMbps ?? 0))
-                        .font(.system(size: 10, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.72))
+                        .font(.system(size: 11.5__, design: .monospaced)).foregroundStyle(Color.primary.opacity(0.88))
                 } else {
-                    Text("Cloudflare 测速").font(.system(size: 9.5)).foregroundStyle(Color.primary.opacity(0.72))
+                    Text("Cloudflare 测速").font(.system(size: 11__)).foregroundStyle(Color.primary.opacity(0.88))
                 }
             }
         }
@@ -1050,12 +1071,12 @@ struct RootView: View {
         FoldSection(title: "进程", icon: "list.bullet.rectangle",
                     summary: m.topCPU.first.map { String(format: "%@ %.0f%%", $0.name, $0.cpu) } ?? "",
                     expanded: bind("proc")) {
-            Text("CPU").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
+            Text("CPU").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
             ForEach(m.topCPU.prefix(5)) { p in
                 ProcLine(name: p.name, right: String(format: "%.1f%%   %.0f MB", p.cpu, p.memMB), highlight: p.cpu > 30)
             }
             Divider().overlay(Color.white.opacity(0.06))
-            Text("内存").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
+            Text("内存").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
             ForEach(m.topMem.prefix(5)) { p in
                 ProcLine(name: p.name, right: String(format: "%.0f MB", p.memMB))
             }
@@ -1098,21 +1119,21 @@ struct RootView: View {
         FoldSection(title: "工具箱", icon: "wrench.and.screwdriver",
                     summary: toolboxSummary(), expanded: bind("tools")) {
             if tools.scanning {
-                Text("正在统计…").font(.system(size: 9.5)).foregroundStyle(Color.primary.opacity(0.72))
+                Text("正在统计…").font(.system(size: 11__)).foregroundStyle(Color.primary.opacity(0.88))
             }
             ForEach(tools.items) { item in
                 HStack(spacing: 6) {
                     Image(systemName: item.icon)
-                        .font(.system(size: 9))
-                        .foregroundStyle(Color.primary.opacity(0.72))
+                        .font(.system(size: 10.5__))
+                        .foregroundStyle(Color.primary.opacity(0.88))
                         .frame(width: 13)
-                    Text(item.title).font(.system(size: 10.5))
+                    Text(item.title).font(.system(size: 12__))
                     Spacer(minLength: 4)
                     Text(item.exists ? Toolbox.human(item.size) : "不存在")
-                        .font(.system(size: 9.5, design: .monospaced))
-                        .foregroundStyle(Color.primary.opacity(0.72))
+                        .font(.system(size: 11__, design: .monospaced))
+                        .foregroundStyle(Color.primary.opacity(0.88))
                     Button(item.needsRoot ? "需 sudo" : "清理") { pendingClean = item }
-                        .font(.system(size: 9.5))
+                        .font(.system(size: 11__))
                         .buttonStyle(.plain)
                         .foregroundStyle(item.size > 0 && !item.needsRoot ? Color.accentColor : Color.secondary.opacity(0.5))
                         .disabled(!item.exists || item.size == 0 || item.needsRoot)
@@ -1124,8 +1145,8 @@ struct RootView: View {
                     pendingClean = CleanItem(id: "__all__", title: "全部可清理项", icon: "sparkles", url: URL(fileURLWithPath: NSHomeDirectory()))
                 } label: {
                     HStack(spacing: 3) {
-                        Image(systemName: "sparkles").font(.system(size: 9))
-                        Text("全部清理").font(.system(size: 9.5))
+                        Image(systemName: "sparkles").font(.system(size: 10.5__))
+                        Text("全部清理").font(.system(size: 11__))
                     }
                 }
                 .buttonStyle(.plain)
@@ -1134,19 +1155,19 @@ struct RootView: View {
                     tools.rescan()
                 } label: {
                     HStack(spacing: 3) {
-                        Image(systemName: "arrow.clockwise").font(.system(size: 8.5))
-                        Text("重新扫描").font(.system(size: 9.5))
+                        Image(systemName: "arrow.clockwise").font(.system(size: 10__))
+                        Text("重新扫描").font(.system(size: 11__))
                     }
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(Color.primary.opacity(0.72))
+                .foregroundStyle(Color.primary.opacity(0.88))
                 Spacer()
                 Text("磁盘可用 \(String(format: "%.0f", m.diskFree)) GB")
-                    .font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.72))
+                    .font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.88))
             }
             .padding(.top, 2)
             HStack(spacing: 8) {
-                Text("工具").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.55))
+                Text("工具").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.7))
                 Button("卸载程序…") {
                     NotificationCenter.default.post(name: .init("SensorBarOpenUninstaller"), object: nil)
                 }
@@ -1155,25 +1176,25 @@ struct RootView: View {
                 }
                 Spacer()
             }
-            .font(.system(size: 9.5))
+            .font(.system(size: 11__))
             .buttonStyle(.plain)
             .foregroundStyle(Color.primary.opacity(0.85))
 
             HStack(spacing: 8) {
-                Text("维护").font(.system(size: 9)).foregroundStyle(Color.primary.opacity(0.55))
+                Text("维护").font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.7))
                 Button("清空剪贴板") { tools.runMaintenance("clipboard") }
                 Button("重启 Dock") { tools.runMaintenance("dock") }
                 Button("重启 Finder") { tools.runMaintenance("finder") }
                 Button("刷新 DNS") { tools.runMaintenance("dns") }
                 Spacer()
             }
-            .font(.system(size: 9.5))
+            .font(.system(size: 11__))
             .buttonStyle(.plain)
             .foregroundStyle(Color.primary.opacity(0.8))
             if !tools.lastMessage.isEmpty {
                 Text(tools.lastMessage)
-                    .font(.system(size: 9.5))
-                    .foregroundStyle(Color.primary.opacity(0.72))
+                    .font(.system(size: 11__))
+                    .foregroundStyle(Color.primary.opacity(0.88))
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -1208,19 +1229,19 @@ struct RootView: View {
 
     private var footer: some View {
         HStack(spacing: 10) {
-            Text("v" + ((Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")).font(.system(size: 9.5, design: .monospaced))
-                .foregroundStyle(Color.primary.opacity(0.55))
+            Text("v" + ((Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "")).font(.system(size: 11__, design: .monospaced))
+                .foregroundStyle(Color.primary.opacity(0.7))
 
             Spacer()
 
             Text(String(format: "%.0f°", m.tempPkg))
-                .font(.system(size: 10, design: .monospaced))
-                .foregroundStyle(Color.primary.opacity(0.72))
+                .font(.system(size: 11.5__, design: .monospaced))
+                .foregroundStyle(Color.primary.opacity(0.88))
 
             Button("退出") { NSApp.terminate(nil) }
-                .font(.system(size: 10))
+                .font(.system(size: 11.5__))
                 .buttonStyle(.plain)
-                .foregroundStyle(Color.primary.opacity(0.72))
+                .foregroundStyle(Color.primary.opacity(0.88))
         }
     }
 }
