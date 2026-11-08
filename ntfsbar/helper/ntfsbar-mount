@@ -103,7 +103,8 @@ case "${1:-}" in
     echo "ntfs-3g: $NTFS3G"
     "$NTFS3G" --version 2>&1 | head -1
     echo "console user: ${CONSOLE_USER:-?} (uid=$CONSOLE_UID)"
-    "$MOUNT_BIN" | /usr/bin/grep -i ntfs || echo "(no NTFS mount)"
+    # ntfs-3g 经 fuse-t 挂载时在 mount 里显示为 (nfs)，所以要一起列出来
+    "$MOUNT_BIN" | /usr/bin/grep -Ei "ntfs|fuse-t:" || echo "(no NTFS mount)"
     ;;
   *)
     echo "usage: ntfsbar-mount {mount <device> <name>|unmount <mountPoint>|auto|status}" >&2
