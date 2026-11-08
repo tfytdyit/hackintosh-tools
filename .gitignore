@@ -1,0 +1,16 @@
+# 构建产物
+.build/
+.build-mas/
+*.o
+*.dSYM/
+*.app/
+*.pkg
+*.dmg
+
+# 系统垃圾
+.DS_Store
+._*
+
+# 本地日志/诊断输出
+*.log
+safety/*.txt

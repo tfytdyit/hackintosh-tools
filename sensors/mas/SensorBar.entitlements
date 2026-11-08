@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Mac App Store 必须开启 App Sandbox -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <!-- 只读：CPU/内存/电池等宿主统计 -->
+    <key>com.apple.security.temporary-exception.iokit-user-client-class</key>
+    <array>
+        <string>AppleSMC</string>
+    </array>
+</dict>
+</plist>
