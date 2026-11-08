@@ -98,3 +98,24 @@ sudo ntfsbar-mount auto               # 再由 NTFSBar 换成可读写
 ```bash
 sudo /usr/local/bin/ntfsbar-mount auto
 ```
+
+## 挂载方式：本地 macFUSE（2026-11-08 起）
+
+两种后端都验证过，最终切到**本地**这一种：
+
+| 后端 | mount 显示 | 说明 |
+|---|---|---|
+| fuse-t（默认） | `fuse-t:/F (nfs)` | 本地回环 NFS，数据不出网卡，但文件系统类型是 nfs |
+| macFUSE 5.5+ | `/dev/disk1s2 on /Volumes/F (macfuse, local, ...)` | **真正的本地文件系统**，和 Tuxera 观感一致 |
+
+启用本地挂载的步骤（已做过，换机器时照做）：
+
+1. 装 macFUSE 5.5.0（新版走 FSKit，不需要内核扩展）；
+2. 系统设置 → 通用 → 登录项与扩展 → 文件系统扩展，允许 **macFUSE**（还有 fuse-t），之后重启；
+3. 用 macFUSE 的头文件/库重编 ntfs-3g：
+   `PATH=<pkg-config shim>:$PATH CPPFLAGS="-D_FILE_OFFSET_BITS=64 -D_DARWIN_USE_64_BIT_INODE -I/usr/local/include/fuse" LDFLAGS="-L/usr/local/lib -lfuse" ./configure --prefix=/usr/local --sbindir=/usr/local/bin --bindir=/usr/local/bin --with-fuse=external && make && sudo make install`
+4. 把编好的二进制存成 `/usr/local/bin/ntfs-3g.macfuse`（helper 会优先用它），fuse-t 版留作 `/usr/local/bin/ntfs-3g.fuset` 兜底。
+
+`helper/ntfsbar-mount` 的逻辑：`/usr/local/bin/ntfs-3g.macfuse` 存在就用它（本地挂载），否则退回 `/usr/local/bin/ntfs-3g`（fuse-t 回环）。
+
+> 注意：fuse-t 1.2.9 的 libfuse 里没有任何 FSKit 代码，`-o backend=fskit` 传了也不会挂载，所以「本地化」只能走 macFUSE。

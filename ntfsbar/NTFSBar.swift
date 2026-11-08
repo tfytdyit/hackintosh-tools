@@ -14,7 +14,7 @@ struct NTFSVolume: Identifiable {
     var isMounted: Bool { mountPoint != nil }
     var isWritableNTFS: Bool {
         guard let fs = fsType else { return false }
-        return (fs == "tuxera_ntfs" || fs == "nfs") && !readOnly
+        return (fs == "tuxera_ntfs" || fs == "nfs" || fs == "macfuse" || fs == "ntfs") && !readOnly
     }
 }
 
@@ -104,7 +104,7 @@ enum Volumes {
                 let mountedFs = (fst ?? "").lowercased()
                 let isNTFS: Bool
                 if !mountedFs.isEmpty {
-                    isNTFS = ["ntfs", "tuxera_ntfs", "ufsd_ntfs", "nfs"].contains(mountedFs)
+                    isNTFS = ["ntfs", "tuxera_ntfs", "ufsd_ntfs", "nfs", "macfuse"].contains(mountedFs)
                 } else {
                     isNTFS = fsUpper.isEmpty || fsUpper.contains("NTFS") || fsUpper == "PERSONALITY_UNKNOWN"
                 }

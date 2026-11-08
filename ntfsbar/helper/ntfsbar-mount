@@ -6,7 +6,12 @@
 #   ntfsbar-mount status                        打印环境与当前 NTFS 挂载
 set -u
 
-NTFS3G=/usr/local/bin/ntfs-3g
+# 优先用 macFUSE 编译版（本地挂载，mount 显示 macfuse）；没有则退回 fuse-t 版（本地回环 nfs）
+if [ -x /usr/local/bin/ntfs-3g.macfuse ]; then
+  NTFS3G=/usr/local/bin/ntfs-3g.macfuse
+else
+  NTFS3G=/usr/local/bin/ntfs-3g
+fi
 MOUNT_BIN=/sbin/mount
 UMOUNT_BIN=/sbin/umount
 DISKUTIL=/usr/sbin/diskutil
