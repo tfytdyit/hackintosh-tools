@@ -62,6 +62,8 @@ final class PlayerEngine: NSObject, ObservableObject {
     private var lastPos: Double = 0
     private var endObserver: NSObjectProtocol?
     private var stallObserver: NSObjectProtocol?
+    private var itemStatusObserver: NSKeyValueObservation?
+    @Published var lastErrorText: String = ""
     private var saveTimer: Timer?
 
     override init() {
@@ -197,6 +199,7 @@ final class PlayerEngine: NSObject, ObservableObject {
         observe(item)
         usingProxy = proxy
         currentURL = url
+        watchItemStatus(item, proxy: proxy, url: url)
         player.seek(to: CMTime(seconds: pos, preferredTimescale: 600),
                     toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
             guard let self else { return }
@@ -208,6 +211,28 @@ final class PlayerEngine: NSObject, ObservableObject {
         }
     }
 
+    /// 切过去之后盯着状态：代理文件坏（黑屏的典型来源）就自动退回原片
+    private func watchItemStatus(_ item: AVPlayerItem, proxy: Bool, url: URL) {
+        if let t = itemStatusObserver { t.invalidate(); itemStatusObserver = nil }
+        itemStatusObserver = item.observe(\.status, options: [.new]) { [weak self] it, _ in
+            guard let self else { return }
+            guard it.status == .failed else { return }
+            DispatchQueue.main.async {
+                self.lastErrorText = it.error?.localizedDescription ?? "播放失败"
+                if proxy, let src = self.sourceURL {
+                    // 坏代理：删掉，回原片
+                    try? FileManager.default.removeItem(at: url)
+                    self.swapItem(to: src, proxy: false)
+                }
+            }
+        }
+    }
+
+    private func revertToSourceIfNeeded() {
+        guard usingProxy, let src = sourceURL else { return }
+        swapItem(to: src, proxy: false)
+    }
+
     /// 速度 ≥1.4 且开启了自动代理时：有代理就切过去，没有就后台生成
     func ensureProxyState() {
         guard let src = sourceURL else { return }
@@ -215,7 +240,23 @@ final class PlayerEngine: NSObject, ObservableObject {
         if wantProxy {
             if usingProxy { return }
             if let ready = ProxyManager.shared.existingProxy(for: src) {
-                swapItem(to: ready, proxy: true)
+                guard !proxyPreparing else { return }
+                proxyPreparing = true
+                DispatchQueue.global(qos: .userInitiated).async {
+                    let ok = ProxyManager.shared.validate(ready)
+                    DispatchQueue.main.async {
+                        guard let self = self as PlayerEngine? else { return }
+                        self.proxyPreparing = false
+                        if ok {
+                            if self.autoProxyEnabled, self.speed >= 1.4, self.sourceURL == src, !self.usingProxy {
+                                self.swapItem(to: ready, proxy: true)
+                            }
+                        } else {
+                            try? FileManager.default.removeItem(at: ready)
+                            self.ensureProxyState()
+                        }
+                    }
+                }
                 return
             }
             guard !proxyPreparing else { return }

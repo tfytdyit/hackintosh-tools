@@ -153,15 +153,21 @@ struct ContentView: View {
 
     // MARK: 顶栏
 
+    private func badgeText(_ text: String, color: Color) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .medium, design: .monospaced))
+            .foregroundStyle(color.opacity(0.95))
+            .padding(.horizontal, 6).padding(.vertical, 2.5)
+            .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(.black.opacity(0.35)))
+    }
+
     private func topBar(compact: Bool) -> some View {
         HStack(spacing: 8) {
             Spacer(minLength: 0)
             if engine.usingProxy {
-                Text("1080p 代理")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.green.opacity(0.95))
-                    .padding(.horizontal, 6).padding(.vertical, 2.5)
-                    .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(.black.opacity(0.35)))
+                badgeText(ProxyQuality.current == .p720 ? "720p 代理" : "1080p 代理", color: .green)
+            } else if engine.proxyPreparing {
+                badgeText("代理 \(Int(ProxyManager.shared.progress * 100))%", color: .orange)
             }
             HStack(spacing: 4) {
                 HoverIcon(symbol: "list.bullet", size: 13, active: showPlaylist, help: "播放列表（V）") {
