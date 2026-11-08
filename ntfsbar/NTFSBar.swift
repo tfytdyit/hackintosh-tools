@@ -83,28 +83,33 @@ enum Volumes {
                     }
                 }
 
-                let fsUpper = (fsFromInfo ?? "").uppercased()
-                // 明确不是 NTFS 的（exfat/fat32/apfs/hfs）直接跳过
-                if !fsUpper.isEmpty,
-                   !fsUpper.contains("NTFS"),
-                   !(fsFromInfo ?? "").isEmpty,
-                   fsUpper != "PERSONALITY_UNKNOWN" {
-                    continue
-                }
-
                 let name: String
                 if let vn = p["VolumeName"] as? String, !vn.isEmpty { name = vn } else { name = ident }
                 let size = (p["Size"] as? NSNumber)?.doubleValue ?? 0
 
+                // 先找挂载点（ntfs-3g 走 fuse-t，设备名显示为 fuse-t:/卷名，只能按挂载点匹配）
                 var mp: String? = nil
                 var fst: String? = nil
                 var ro = true
-                for m in mounts {
-                    if m.device == dev { mp = m.mountPoint; fst = m.fs; ro = m.readOnly; break }
+                if let m = mounts.first(where: { $0.device == dev }) {
+                    mp = m.mountPoint; fst = m.fs; ro = m.readOnly
+                } else if let m = mounts.first(where: { $0.mountPoint == "/Volumes/" + name }) {
+                    mp = m.mountPoint; fst = m.fs; ro = m.readOnly
                 }
-                if mp == nil, let hit = mounts.first(where: { $0.mountPoint.hasSuffix("/" + name) }) {
-                    mp = hit.mountPoint; fst = hit.fs; ro = hit.readOnly
+
+                // 判定是不是 NTFS：
+                // 已挂载 → 看挂载类型（ntfs / tuxera_ntfs / ufsd_NTFS / fuse-t 的 nfs）
+                // 未挂载 → 看 diskutil 的 FilesystemType
+                let fsUpper = (fsFromInfo ?? "").uppercased()
+                let mountedFs = (fst ?? "").lowercased()
+                let isNTFS: Bool
+                if !mountedFs.isEmpty {
+                    isNTFS = ["ntfs", "tuxera_ntfs", "ufsd_ntfs", "nfs"].contains(mountedFs)
+                } else {
+                    isNTFS = fsUpper.isEmpty || fsUpper.contains("NTFS") || fsUpper == "PERSONALITY_UNKNOWN"
                 }
+                guard isNTFS else { continue }
+
                 if fst == nil { fst = fsFromInfo }
                 result.append(NTFSVolume(id: dev, name: name, sizeGB: size / 1e9,
                                          mountPoint: mp, fsType: fst, readOnly: ro))

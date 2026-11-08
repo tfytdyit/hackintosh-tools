@@ -49,6 +49,21 @@ ntfsbar-mount auto                          # 把只读挂载的 NTFS 卷切成�
      文件已删除，**重启一次**就彻底不加载了；重启后 macOS 会先把 NTFS 卷只读挂上，
      NTFSBar 的自动挂载守护进程在 45 秒内把它们换成 ntfs-3g 可读写。
 
+## 已在本机切换完成（2026-11-08）
+
+Tuxera 已卸载，4 个 NTFS 卷全部由 ntfs-3g 接管：
+
+```
+/dev/disk0s2  D              677.1GB  可读写(nfs)  /Volumes/D
+/dev/disk1s2  F              623.9GB  可读写(nfs)  /Volumes/F
+/dev/disk0s5  Software        54.1GB  可读写(nfs)  /Volumes/Software
+/dev/disk0s1  Win11 Pro X64  215.0GB  可读写(nfs)  /Volumes/Win11 Pro X64
+```
+
+`--list` 输出中的 `nfs` 就是 fuse-t 的挂载方式（不是网络盘）。检测 NTFS 时不能只看
+`diskutil` 的 `FilesystemType`（ntfs-3g 挂上后它会误报 `msdos`），要按挂载表里的文件系统
+（`ntfs` / `tuxera_ntfs` / `ufsd_NTFS` / `nfs`）判断。
+
 ## 注意
 
 - 切到 Windows 前建议先卸载卷（或在 Windows 里正常关机），避免快速启动把分区标记成脏盘。
