@@ -69,3 +69,18 @@ Tuxera 已卸载，4 个 NTFS 卷全部由 ntfs-3g 接管：
 - 切到 Windows 前建议先卸载卷（或在 Windows 里正常关机），避免快速启动把分区标记成脏盘。
 - `/tmp` 在 macOS 上是 `/private/tmp` 的软链接：卸载时要 `umount /private/tmp/xxx` 或 `diskutil unmount`，否则会报 `not currently mounted`。
 - fuse-t 的挂载在 `mount` 里显示为 `fuse-t:/<卷名> ... (nfs)`，这是正常的（走本地 NFS 回环）。
+
+## 排障：同一卷出现两条 fuse-t 挂载
+
+ntfs-3g 有时会把 `mount -t nfs` 卡在半路，导致同一挂载点堆叠两层。清理：
+
+```bash
+for i in $(seq 1 8); do
+  sudo /sbin/umount -f /Volumes/D 2>/dev/null
+  n=$(/sbin/mount | grep -c "on /Volumes/D (nfs)")
+  [ "$n" -eq 0 ] && break; sleep 0.4
+done
+sudo pkill -f "go-nfsv4 --volname D"
+sudo diskutil mount /dev/disk0s2      # 先让系统挂一次
+sudo ntfsbar-mount auto               # 再由 NTFSBar 换成可读写
+```
