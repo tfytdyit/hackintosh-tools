@@ -84,3 +84,17 @@ sudo pkill -f "go-nfsv4 --volname D"
 sudo diskutil mount /dev/disk0s2      # 先让系统挂一次
 sudo ntfsbar-mount auto               # 再由 NTFSBar 换成可读写
 ```
+
+## 重启之后的自动挂载
+
+重启后 macOS 会先把 NTFS 卷以只读挂上（`(ntfs, ... read-only)`），
+`/Library/LaunchDaemons/com.hackintosh.ntfsbar.automount.plist` 每 45 秒扫一次，
+把只读的卷换成 ntfs-3g 可读写，日志在 `/var/log/ntfsbar.log`。
+
+如果某个卷（例如 `/Volumes/Win11 Pro X64`，名字里带空格）一直没被换掉，
+说明 helper 解析挂载点时按空格截断了 —— 1.1 已修（`auto_mount` 改用 sed 抽挂载点）。
+手动补一次：
+
+```bash
+sudo /usr/local/bin/ntfsbar-mount auto
+```

@@ -24,7 +24,8 @@ mountline_for_mp() {
 }
 
 mp_of_dev() {
-  "$MOUNT_BIN" | /usr/bin/awk -v d="$1" '$1==d {print $3; exit}'
+  # 挂载点可能带空格（/Volumes/Win11 Pro X64），不能用 awk 取第 3 列
+  "$MOUNT_BIN" | /usr/bin/sed -n "s#^$1 on \(.*\) ([a-z0-9_,-]*\(,.*\)*)\$#\1#p" | head -1
 }
 
 unmount_mp() {
@@ -86,7 +87,11 @@ mount_rw() {
 }
 
 auto_mount() {
-  "$MOUNT_BIN" | /usr/bin/awk '/\(ntfs,/ && /read-only/ {print $1, $3}' | while read -r dev mp; do
+  # 只处理「系统以 ntfs 只读挂上」的卷；挂载点可能含空格（/Volumes/Win11 Pro X64），
+  # 所以整行读进来再用 sed 抽挂载点，不能用 awk 取第 3 列。
+  "$MOUNT_BIN" | /usr/bin/grep -E '\((ntfs|ufsd_NTFS),.*read-only' | while IFS= read -r line; do
+    dev=$(echo "$line" | /usr/bin/awk '{print $1}')
+    mp=$(echo "$line" | /usr/bin/sed -E 's#^.* on (.*) \((ntfs|ufsd_NTFS)[^)]*\).*$#\1#')
     [ -z "$mp" ] && continue
     [ "$mp" = "/" ] && continue
     name=$(/usr/bin/basename "$mp")

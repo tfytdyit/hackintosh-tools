@@ -59,6 +59,26 @@ sudo /bin/launchctl bootstrap system /Library/LaunchDaemons/com.hackintosh.ntfsb
   || echo "  ! launchd 注册返回非 0（下次开机仍会加载）"
 echo "  ✓ /Library/LaunchDaemons/com.hackintosh.ntfsbar.automount.plist"
 
+bold "== 3.5/4 注册登录时自启（菜单栏图标）"
+AGENT="$HOME/Library/LaunchAgents/com.hackintosh.NTFSBar.plist"
+mkdir -p "$HOME/Library/LaunchAgents"
+cat > "$AGENT" <<AGENTEOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key><string>com.hackintosh.NTFSBar</string>
+	<key>ProgramArguments</key>
+	<array><string>/Applications/NTFSBar.app/Contents/MacOS/NTFSBar</string></array>
+	<key>RunAtLoad</key><true/>
+	<key>ProcessType</key><string>Interactive</string>
+</dict>
+</plist>
+AGENTEOF
+launchctl unload "$AGENT" >/dev/null 2>&1
+launchctl load "$AGENT" 2>/dev/null || true
+echo "  ✓ $AGENT"
+
 bold "== 4/4 启动菜单栏程序"
 /usr/bin/open /Applications/NTFSBar.app
 sleep 1
