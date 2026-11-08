@@ -199,6 +199,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.removeAllItems()
 
         // 驱动状态
+        let backendItem = NSMenuItem(title: backendSummary(), action: nil, keyEquivalent: "")
+        backendItem.isEnabled = false
+        menu.addItem(backendItem)
         let driverItem = NSMenuItem(title: driverSummary(), action: nil, keyEquivalent: "")
         driverItem.isEnabled = false
         menu.addItem(driverItem)
@@ -280,6 +283,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private func fmtGB(_ g: Double) -> String {
         if g >= 1000 { return String(format: "%.1f TB", g / 1000) }
         return String(format: "%.0f GB", g)
+    }
+
+    /// 当前挂载后端：macfuse（本地）/ nfs（fuse-t 回环）/ tuxera_ntfs
+    private func backendSummary() -> String {
+        let table = Volumes.mountTable()
+        let fss = volumes.compactMap { $0.mountPoint }.compactMap { mp -> String? in
+            table.first { $0.mountPoint == mp }?.fs
+        }
+        let macfuse = FileManager.default.isExecutableFile(atPath: "/usr/local/bin/ntfs-3g.macfuse")
+        if fss.isEmpty { return macfuse ? "挂载后端：macFUSE（本地）" : "挂载后端：fuse-t（回环 nfs）" }
+        let local = fss.filter { $0 == "macfuse" }.count
+        let remote = fss.filter { $0 == "nfs" }.count
+        let other = fss.count - local - remote
+        var bits: [String] = []
+        if local > 0 { bits.append("macFUSE 本地 ×\(local)") }
+        if remote > 0 { bits.append("fuse-t nfs ×\(remote)") }
+        if other > 0 { bits.append("其他 ×\(other)") }
+        return "挂载后端：" + bits.joined(separator: " · ")
     }
 
     private func driverSummary() -> String {
