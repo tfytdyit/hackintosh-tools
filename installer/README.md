@@ -15,3 +15,13 @@ bash installer/make-pkg.sh videobar     # → VideoBar-<版本>.pkg
 - 安装位置：`/Applications`
 - 本地 ad-hoc 签名，安装时可能提示「无法验证开发者」→ 右键 →「打开」
 - 上架 App Store 需要的签名与工程配置见 `mas/README.md`
+
+## 便携版 zip（免 pkg、绕过 Gatekeeper）
+
+```bash
+bash installer/make-portable.sh sensors/SensorBar.app
+bash installer/make-portable.sh videobar/VideoBar.app   # 或 /Applications/VideoBar.app
+```
+
+产出 `SensorBar-<ver>-portable.zip`：里面是 App + `install.command`（双击 → 输一次密码 → 复制到 /Applications、修 owner、注册、打开）。
+适合 pkg 被系统拦下时用。
