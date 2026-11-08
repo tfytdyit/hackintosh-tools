@@ -6,6 +6,8 @@
 	<string>NTFSBar</string>
 	<key>CFBundleExecutable</key>
 	<string>NTFSBar</string>
+	<key>CFBundleIconFile</key>
+	<string>NTFSBar</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.hackintosh.ntfsbar</string>
 	<key>CFBundleName</key>
@@ -15,7 +17,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.2</string>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>3</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
 	<key>LSUIElement</key>

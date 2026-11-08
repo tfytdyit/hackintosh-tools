@@ -12,6 +12,7 @@ mkdir -p .build "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp .build/NTFSBar "$APP/Contents/MacOS/NTFSBar"
 cp Info.plist "$APP/Contents/Info.plist"
 cp helper/com.hackintosh.ntfsbar.automount.plist "$APP/Contents/Resources/"
+[ -f NTFSBar.icns ] && cp NTFSBar.icns "$APP/Contents/Resources/NTFSBar.icns"
 chmod +x helper/ntfsbar-mount
 /usr/bin/chmod 644 "$APP/Contents/Resources/com.hackintosh.ntfsbar.automount.plist" 2>/dev/null || true
 codesign -f -s - "$APP" 2>/dev/null
