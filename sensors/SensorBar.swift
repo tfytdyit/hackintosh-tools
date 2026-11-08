@@ -1153,9 +1153,6 @@ struct RootView: View {
                 Button("一键优化") {
                     tools.optimize { msg in tools.lastMessage = msg }
                 }
-                Button("磁盘 / NTFS") {
-                    NotificationCenter.default.post(name: .init("SensorBarOpenDisks"), object: nil)
-                }
                 Spacer()
             }
             .font(.system(size: 9.5))
@@ -1312,9 +1309,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         if CommandLine.arguments.contains("--uninstall") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in self?.showUninstaller() }
-        }
-        if CommandLine.arguments.contains("--disks") {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in self?.showDisks() }
         }
     }
 
