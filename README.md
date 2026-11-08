@@ -12,8 +12,7 @@
 - **Releases 页面** ：`SensorBar-<版本>.pkg`、`VideoBar-<版本>.pkg`（各自装到 `/Applications`）
 - 或自行构建（见下），产物直接 `open` 即可
 
-> 这些包是**本地 ad-hoc 签名**，没有 Apple 开发者证书。第一次打开若提示「无法打开，因为无法验证开发者」：
-> 右键 →「打开」→ 再点「打开」；或终端执行 `xattr -dr com.apple.quarantine /Applications/SensorBar.app`。
+> 双击 pkg（提示「Apple无法验证」时打开设置→隐私与安全性→安全性→仍要打开）。已装旧版会原地覆盖。
 
 ## 构建（无需 Xcode 工程，脚本直接调 swiftc/clang）
 
