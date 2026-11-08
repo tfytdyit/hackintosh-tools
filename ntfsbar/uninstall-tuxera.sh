@@ -5,7 +5,8 @@ set -u
 [ "$(id -u)" -eq 0 ] || { echo "需要 root：sudo bash $0"; exit 1; }
 
 echo "== 1/4 卸载所有 NTFS 卷（先卸载才能移除驱动）"
-mount | awk '/tuxera_ntfs/ {print $3}' | while read -r mp; do
+# 注意：挂载点可能带空格（如 /Volumes/Win11 Pro X64），不能用 awk '{print $3}'
+mount | grep 'tuxera_ntfs' | sed -E 's#^.* on (.*) \((tuxera_ntfs|ufsd_NTFS).*#\1#' | while read -r mp; do
   [ -n "$mp" ] && /usr/sbin/diskutil unmount force "$mp" >/dev/null 2>&1 && echo "  已卸载 $mp"
 done
 sleep 1
