@@ -879,9 +879,6 @@ struct RootView: View {
             LabelValue(label: "当前 P-State 占用", value: m.gpuUtilPState >= 0 ? "\(m.gpuUtilPState)%" : "—")
             LabelValue(label: "设备", value: "Intel UHD Graphics 630")
             LabelValue(label: "显存（动态共享）", value: "1536 MB")
-            Text("说明：核显占用来自 IOAccelerator 的 PerformanceStatistics，NVIDIA GTX 1050 在 macOS 26 无驱动、不提供任何指标。")
-                .font(.system(size: 10.5__)).foregroundStyle(Color.primary.opacity(0.75))
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
