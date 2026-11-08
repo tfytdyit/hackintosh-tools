@@ -14,3 +14,4 @@
 # 本地日志/诊断输出
 *.log
 safety/*.txt
+*.zip
