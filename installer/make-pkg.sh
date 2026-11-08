@@ -35,8 +35,26 @@ sed -e "s|@TITLE@|$APP $VER|g" \
 sed -e "s|@APP@|$APP|g" -e "s|@VER@|$VER|g" installer/conclusion.html > "$STAGE/res/conclusion.html"
 sed -e "s|@APP@|$APP|g" -e "s|@VER@|$VER|g" -e "s|@BID@|$BID|g" installer/distribution.xml > "$STAGE/distribution.xml"
 
+# 关键：必须关掉 bundle relocation，否则系统上任何同名 bundle（比如工作区里的
+# .../sensors/SensorBar.app）会让 Installer 把内容"重定位"到那里，/Applications 里什么都不留
+cat > "$STAGE/component.plist" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+  <dict>
+    <key>BundleHasStrictIdentifier</key><true/>
+    <key>BundleIsRelocatable</key><false/>
+    <key>BundleIsVersionChecked</key><false/>
+    <key>BundleOverwriteAction</key><string>upgrade</string>
+    <key>RootRelativeBundlePath</key><string>Applications/$APP.app</string>
+  </dict>
+</array>
+</plist>
+PLIST
+
 echo "==> 3/4 pkgbuild"
-(cd "$STAGE" && pkgbuild --root root --identifier "$BID" --version "$VER" --install-location / Payload.pkg >/dev/null) || { echo "pkgbuild 失败"; rm -rf "$STAGE"; exit 1; }
+(cd "$STAGE" && pkgbuild --root root --identifier "$BID" --version "$VER" --install-location / --component-plist component.plist Payload.pkg >/dev/null) || { echo "pkgbuild 失败"; rm -rf "$STAGE"; exit 1; }
 
 echo "==> 4/4 productbuild"
 (cd "$STAGE" && productbuild --distribution distribution.xml --package-path . --resources res "$OUT" >/dev/null) || { echo "productbuild 失败"; rm -rf "$STAGE"; exit 1; }
