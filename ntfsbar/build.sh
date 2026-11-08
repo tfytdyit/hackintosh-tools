@@ -13,6 +13,7 @@ cp .build/NTFSBar "$APP/Contents/MacOS/NTFSBar"
 cp Info.plist "$APP/Contents/Info.plist"
 cp helper/com.hackintosh.ntfsbar.automount.plist "$APP/Contents/Resources/"
 chmod +x helper/ntfsbar-mount
-/usr/bin/codesign -f -s - "$APP" 2>/dev/null
+/usr/bin/chmod 644 "$APP/Contents/Resources/com.hackintosh.ntfsbar.automount.plist" 2>/dev/null || true
+codesign -f -s - "$APP" 2>/dev/null
 
 echo "完成：$(pwd)/$APP"
