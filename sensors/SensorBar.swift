@@ -1258,6 +1258,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
+        hosting = NSHostingView(rootView: RootView(m: metrics))
         hosting.frame = NSRect(x: 0, y: 0, width: 400, height: 560)
 
         panel = NSPanel(contentRect: NSRect(x: 0, y: 0, width: 400, height: 560),
