@@ -157,6 +157,13 @@ final class PlayerEngine: NSObject, ObservableObject {
         }
 
         loadMeta(url: url, item: item)
+        ProxyPlanner.prepare(asset: AVURLAsset(url: url))
+        if profileObserver == nil {
+            profileObserver = NotificationCenter.default.addObserver(forName: .init("VBDecodeProfileReady"),
+                                                                    object: nil, queue: .main) { [weak self] _ in
+                self?.ensureProxyState()
+            }
+        }
         let autoPlay = UserDefaults.standard.object(forKey: VBSettings.autoPlay) as? Bool ?? true
         if autoPlay {
             player.play()
@@ -233,22 +240,73 @@ final class PlayerEngine: NSObject, ObservableObject {
         swapItem(to: src, proxy: false)
     }
 
-    /// 速度 ≥1.4 且开启了自动代理时：有代理就切过去，没有就后台生成
+    /// 自动代理：按「这台机器的解码吞吐 + 视频分辨率」挑档位（1080p / 720p / 540p），
+    /// 原片本身够快就不生成代理。
+    private var activeTier: ProxyTier?
+    private var profileObserver: NSObjectProtocol?
+
+    func decideProxyTier(for src: URL) -> ProxyTier? {
+        let mode = ProxyMode.current
+        if mode == .off { return nil }
+        let w = meta.width, h = meta.height
+        let fps = max(24, meta.fps)
+        let codec = meta.codec.isEmpty ? "?" : meta.codec
+        if let d = ProxyPlanner.cachedDecodeFPS(width: w, height: h, codec: codec) {
+            let t = ProxyPlanner.decide(width: w, height: h, srcFPS: fps, decodeFPS: d,
+                                        targetSpeed: 2.0, mode: mode)
+            NSLog("VideoBar proxy: %dx%d %.0ffps decode=%.1ffps mode=%d -> %@", w, h, fps, d, mode.rawValue, t?.title ?? "原片直接播")
+            return t
+        }
+        switch mode {
+        case .auto: return .p720
+        case .p1080: return .p1080
+        case .p720: return .p720
+        case .p540: return .p540
+        case .off: return nil
+        }
+    }
+
+    /// 速度 ≥1.4 时：按档位找/生成代理，原片够快就不切
     func ensureProxyState() {
         guard let src = sourceURL else { return }
+        if ProxyMode.current == .off {
+            if usingProxy { swapItem(to: src, proxy: false) }
+            return
+        }
         let wantProxy = autoProxyEnabled && speed >= 1.4
         if wantProxy {
-            if usingProxy { return }
-            if let ready = ProxyManager.shared.existingProxy(for: src) {
+            guard let tier = decideProxyTier(for: src) else { return }
+            if usingProxy {
+                guard activeTier != tier else { return }
+                if let ready = ProxyManager.shared.existingProxy(for: src, tier: tier),
+                   ProxyManager.shared.validate(ready) {
+                    UserDefaults.standard.set(tier.title, forKey: "vb.activeProxyTier")
+                    activeTier = tier
+                    swapItem(to: ready, proxy: true)
+                } else if !proxyPreparing {
+                    proxyPreparing = true
+                    ProxyManager.shared.makeProxy(for: src, tier: tier) { [weak self] out in
+                        guard let self else { return }
+                        self.proxyPreparing = false
+                        guard let out, self.speed >= 1.4, self.sourceURL == src else { return }
+                        UserDefaults.standard.set(tier.title, forKey: "vb.activeProxyTier")
+                        self.activeTier = tier
+                        self.swapItem(to: out, proxy: true)
+                    }
+                }
+                return
+            }
+            if let ready = ProxyManager.shared.existingProxy(for: src, tier: tier) {
                 guard !proxyPreparing else { return }
                 proxyPreparing = true
                 DispatchQueue.global(qos: .userInitiated).async {
                     let ok = ProxyManager.shared.validate(ready)
                     DispatchQueue.main.async {
-                        guard let self = self as PlayerEngine? else { return }
                         self.proxyPreparing = false
                         if ok {
                             if self.autoProxyEnabled, self.speed >= 1.4, self.sourceURL == src, !self.usingProxy {
+                                UserDefaults.standard.set(tier.title, forKey: "vb.activeProxyTier")
+                                self.activeTier = tier
                                 self.swapItem(to: ready, proxy: true)
                             }
                         } else {
@@ -261,16 +319,19 @@ final class PlayerEngine: NSObject, ObservableObject {
             }
             guard !proxyPreparing else { return }
             proxyPreparing = true
-            ProxyManager.shared.makeProxy(for: src) { [weak self] out in
+            ProxyManager.shared.makeProxy(for: src, tier: tier) { [weak self] out in
                 guard let self else { return }
                 self.proxyPreparing = false
                 guard let out else { return }
                 if self.autoProxyEnabled, self.speed >= 1.4, self.sourceURL == src, !self.usingProxy {
+                    UserDefaults.standard.set(tier.title, forKey: "vb.activeProxyTier")
+                    self.activeTier = tier
                     self.swapItem(to: out, proxy: true)
                 }
             }
-        } else if usingProxy, let ready = src as URL? {
-            swapItem(to: ready, proxy: false)
+        } else if usingProxy {
+            activeTier = nil
+            swapItem(to: src, proxy: false)
         }
     }
 
@@ -315,6 +376,7 @@ final class PlayerEngine: NSObject, ObservableObject {
             }
         }
     }
+
 
     // MARK: 播放控制
 

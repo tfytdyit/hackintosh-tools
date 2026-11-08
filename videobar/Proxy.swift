@@ -3,19 +3,6 @@ import Foundation
 
 /// 4K60 的 HEVC 在这台机器上解码上限约 60–75 fps，2× 播放必然掉帧。
 /// 办法：生成一份 1080p H.264 代理文件，高速播放时切换到代理（解码压力降到 1/4）。
-enum ProxyQuality: Int, CaseIterable, Identifiable {
-    case p720 = 0, p1080 = 1
-    var id: Int { rawValue }
-    var title: String { self == .p720 ? "720p（更快）" : "1080p（更清晰）" }
-    var presetName: String {
-        self == .p720 ? AVAssetExportPreset1280x720 : AVAssetExportPreset1920x1080
-    }
-    static var current: ProxyQuality {
-        let v = UserDefaults.standard.object(forKey: "vb.proxyQuality") as? Int ?? 0
-        return ProxyQuality(rawValue: v) ?? .p720
-    }
-}
-
 final class ProxyManager: ObservableObject {
     static let shared = ProxyManager()
 
@@ -33,14 +20,13 @@ final class ProxyManager: ObservableObject {
         return d
     }
 
-    func targetURL(for src: URL) -> URL {
+    func targetURL(for src: URL, tier: ProxyTier) -> URL {
         let attrs = try? FileManager.default.attributesOfItem(atPath: src.path)
         let size = (attrs?[.size] as? NSNumber)?.int64Value ?? 0
         let mtime = Int((attrs?[.modificationDate] as? Date)?.timeIntervalSince1970 ?? 0)
         let base = src.deletingPathExtension().lastPathComponent
             .replacingOccurrences(of: "/", with: "_")
-        let tag = ProxyQuality.current == .p720 ? "720p" : "1080p"
-        return cacheDir.appendingPathComponent("\(base)-\(size)-\(mtime)-\(tag).mp4")
+        return cacheDir.appendingPathComponent("\(base)-\(size)-\(mtime)-\(tier.title).mp4")
     }
 
     /// 校验代理文件是否真的能用（能被打开、有视频轨、时长 > 0.5s）。
@@ -64,8 +50,8 @@ final class ProxyManager: ObservableObject {
         return ok
     }
 
-    func existingProxy(for src: URL) -> URL? {
-        let u = targetURL(for: src)
+    func existingProxy(for src: URL, tier: ProxyTier) -> URL? {
+        let u = targetURL(for: src, tier: tier)
         return FileManager.default.fileExists(atPath: u.path) ? u : nil
     }
 
@@ -81,16 +67,14 @@ final class ProxyManager: ObservableObject {
     }
 
     /// 转码成 1080p H.264。异步，完成后回调代理 URL（失败为 nil）。
-    func makeProxy(for src: URL, completion: @escaping (URL?) -> Void) {
+    func makeProxy(for src: URL, tier: ProxyTier, completion: @escaping (URL?) -> Void) {
         guard session == nil else { completion(nil); return }
-        let out = targetURL(for: src)
+        let out = targetURL(for: src, tier: tier)
         let tmp = out.deletingPathExtension().appendingPathExtension("part.mp4")
         try? FileManager.default.removeItem(at: out)
         try? FileManager.default.removeItem(at: tmp)
         let asset = AVURLAsset(url: src)
-        // 720p 转码比 1080p 快约 1.8 倍（实测 30s 切片：25.0s vs 45.5s），2× 播放时解码压力也最小
-        let preset = ProxyQuality.current.presetName
-        guard let e = AVAssetExportSession(asset: asset, presetName: preset) else {
+        guard let e = AVAssetExportSession(asset: asset, presetName: tier.presetName) else {
             completion(nil); return
         }
         e.outputURL = tmp

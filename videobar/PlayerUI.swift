@@ -165,7 +165,7 @@ struct ContentView: View {
         HStack(spacing: 8) {
             Spacer(minLength: 0)
             if engine.usingProxy {
-                badgeText(ProxyQuality.current == .p720 ? "720p 代理" : "1080p 代理", color: .green)
+                badgeText("\(ProxyTier.currentTitle) 代理", color: .green)
             } else if engine.proxyPreparing {
                 badgeText("代理 \(Int(ProxyManager.shared.progress * 100))%", color: .orange)
             }

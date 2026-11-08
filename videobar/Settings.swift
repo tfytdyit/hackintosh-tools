@@ -77,7 +77,22 @@ struct VBSettingsView: View {
                         toggleRow("播完自动下一个", $autoAdvance)
                         toggleRow("默认单曲循环", $loopByDefault)
                         toggleRow("打开文件时展开播放列表", $playlistOnOpen)
-                        toggleRow("2× 以上自动切到 1080p 代理（更流畅）", $autoProxy)
+                        toggleRow("2× 以上自动切到代理（更流畅）", $autoProxy)
+                        HStack {
+                            Text("代理分辨率").font(.system(size: 11))
+                            Spacer()
+                            Picker("", selection: Binding(
+                                get: { ProxyMode.current.rawValue },
+                                set: { UserDefaults.standard.set($0, forKey: "vb.proxyMode") })) {
+                                ForEach(ProxyMode.allCases) { m in Text(m.title).tag(m.rawValue) }
+                            }
+                            .labelsHidden()
+                            .pickerStyle(.menu)
+                            .frame(width: 110)
+                        }
+                        Text("自动：先测一次这台机器的解码速度，再按视频分辨率挑档位（1080p / 720p / 540p）；原片本身够快就不生成代理")
+                            .font(.system(size: 9)).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                     card("控制条") {
                         HStack {
